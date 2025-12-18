@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simulador Benidorm Fest 2026</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #020617;
+      color: #f9fafb;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+    }
+    h2 {
+      margin-top: 24px;
+      margin-bottom: 8px;
+    }
+    .note {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+    }
+    th, td {
+      border: 1px solid #1f2937;
+      padding: 6px 8px;
+    }
+    th {
+      background: #111827;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      color: #9ca3af;
+    }
+    tbody tr:nth-child(even) {
+      background: #020617;
+    }
+    tbody tr:nth-child(odd) {
+      background: #030712;
+    }
+    tbody tr.winner {
+      background: #facc15;
+      color: #111827;
+      font-weight: 600;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #38bdf8;
+    }
+    .controls {
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .btn {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #38bdf8, #a855f7);
+      color: #020617;
+    }
+    .btn-secondary {
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #374151;
+    }
+    .btn span.icon {
+      font-size: 0.9em;
+    }
+    .small {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Benidorm Fest 2026 · Simulador</h1>
+  <p class="note">
+    Ajusta la fuerza de cada candidatura para el jurado y el televoto, y pulsa “Simular” para ver el resultado.
+  </p>
+
+  <h2>Candidaturas</h2>
+  <div class="controls">
+    <button class="btn btn-secondary" id="btn-randomize">
+      <span class="icon">🎲</span>Randomizar fuerzas
+    </button>
+    <button class="btn btn-secondary" id="btn-reset">
+      <span class="icon">↺</span>Reset
+    </button>
+    <button class="btn btn-primary" id="btn-simulate">
+      <span class="icon">▶</span>Simular resultado
+    </button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Artista</th>
+        <th>Canción</th>
+        <th>Fuerza jurado</th>
+        <th>Fuerza televoto</th>
+      </tr>
+    </thead>
+    <tbody id="entries-body"></tbody>
+  </table>
+
+  <h2>Resultado jurado</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Puesto</th>
+        <th>Candidatura</th>
+        <th>Puntos jurado</th>
+      </tr>
+    </thead>
+    <tbody id="jury-results"></tbody>
+  </table>
+
+  <h2>Resultado televoto</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Puesto</th>
+        <th>Candidatura</th>
+        <th>Puntos televoto</th>
+      </tr>
+    </thead>
+    <tbody id="televote-results"></tbody>
+  </table>
+
+  <h2>Clasificación final</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Puesto</th>
+        <th>Candidatura</th>
+        <th>Jurado</th>
+        <th>Televoto</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody id="final-results"></tbody>
+  </table>
+
+  <p class="small">
+    Sistema simplificado: jurado y televoto reparten puntos 12–10–8–7–6–5–4–3–2–1 según la fuerza simulada.
+  </p>
+
+  <script>
+    // PARTICIPANTES DEL BENIDORM FEST 2026
+    const baseEntries = [
+      { id: 1,  artist: "ASHA",                         song: "Turista" },
+      { id: 2,  artist: "Atyat",                        song: "Dopamina" },
+      { id: 3,  artist: "Dani J",                       song: "Bailándote" },
+      { id: 4,  artist: "Dora & Marlon Collins",        song: "Rakata" },
+      { id: 5,  artist: "Funambulista",                 song: "Sobran Gilipo**as" },
+      { id: 6,  artist: "Greg Taro",                    song: "Velita" },
+      { id: 7,  artist: "Izan Llunas",                  song: "¿Qué Vas A Hacer?" },
+      { id: 8,  artist: "Kenneth",                      song: "Los Ojos No Mienten" },
+      { id: 9,  artist: "Kitai",                        song: "El Amor Te Da Miedo" },
+      { id: 10, artist: "Ku Minerva",                   song: "No Volveré A Llorar" },
+      { id: 11, artist: "Luna Ki",                      song: "Bomba De Amor" },
+      { id: 12, artist: "María León & Julia Medina",    song: "Las Damas Y El Vagabundo" },
+      { id: 13, artist: "MAYO",                         song: "Tócame" },
+      { id: 14, artist: "Mikel Herzog Jr.",             song: "Mi Mitad" },
+      { id: 15, artist: "Miranda! & bailamamá",         song: "Despierto Amándote" },
+      { id: 16, artist: "Rosalinda Galán",              song: "Mataora" },
+      { id: 17, artist: "The Quinquis",                 song: "Tú No Me Quieres" },
+      { id: 18, artist: "Tony Grox & LUCYCALYS",        song: "T Amaré" }
+    ];
+
+    let modelEntries = baseEntries.map(e => ({
+      ...e,
+      juryStrength: 50,
+      televoteStrength: 50
+    }));
+
+    const pointsScale = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function renderEntries() {
+      const tbody = document.getElementById("entries-body");
+      tbody.innerHTML = modelEntries.map(e => `
+        <tr>
+          <td>${e.id}</td>
+          <td>${e.artist}</td>
+          <td>${e.song}</td>
+          <td>
+            <input type="range" min="0" max="100" value="${e.juryStrength}"
+              oninput="updateStrength(${e.id}, 'jury', this.value)">
+            <span class="small"> ${e.juryStrength}</span>
+          </td>
+          <td>
+            <input type="range" min="0" max="100" value="${e.televoteStrength}"
+              oninput="updateStrength(${e.id}, 'televote', this.value)">
+            <span class="small"> ${e.televoteStrength}</span>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    window.updateStrength = function(id, type, value) {
+      const entry = modelEntries.find(e => e.id === id);
+      if (!entry) return;
+      const n = Number(value);
+      if (type === "jury") {
+        entry.juryStrength = n;
+      } else {
+        entry.televoteStrength = n;
+      }
+      renderEntries(); // refresca los numeritos de al lado del slider
+    };
+
+    function simulateRanking(entries, mode) {
+      const scored = entries.map(e => {
+        const strength = mode === "jury" ? e.juryStrength : e.televoteStrength;
+        const noise = randomInt(-15, 15);
+        const simScore = Math.max(0, strength + noise);
+        return { ...e, simScore };
+      });
+
+      scored.sort((a, b) => b.simScore - a.simScore);
+
+      return scored.map((e, i) => ({
+        ...e,
+        rank: i + 1,
+        points: pointsScale[i] || 0
+      }));
+    }
+
+    function renderResults(id, results, label) {
+      const tbody = document.getElementById(id);
+      tbody.innerHTML = results.map(r => `
+        <tr>
+          <td>${r.rank}</td>
+          <td>${r.artist} – ${r.song}</td>
+          <td>${r.points}</td>
+        </tr>
+      `).join("");
+    }
+
+    function computeFinal(jury, televote) {
+      const map = new Map();
+      jury.forEach(j => {
+        map.set(j.id, {
+          id: j.id,
+          artist: j.artist,
+          song: j.song,
+          juryPoints: j.points,
+          televotePoints: 0
+        });
+      });
+      televote.forEach(t => {
+        const existing = map.get(t.id);
+        if (existing) {
+          existing.televotePoints = t.points;
+        } else {
+          map.set(t.id, {
+            id: t.id,
+            artist: t.artist,
+            song: t.song,
+            juryPoints: 0,
+            televotePoints: t.points
+          });
+        }
+      });
+
+      const final = Array.from(map.values()).map(e => ({
+        ...e,
+        total: e.juryPoints + e.televotePoints
+      }));
+
+      final.sort((a, b) => b.total - a.total);
+
+      return final.map((e, i) => ({
+        ...e,
+        rank: i + 1
+      }));
+    }
+
+    function renderFinal(results) {
+      const tbody = document.getElementById("final-results");
+      tbody.innerHTML = results.map(r => `
+        <tr class="${r.rank === 1 ? "winner" : ""}">
+          <td>${r.rank}</td>
+          <td>${r.artist} – ${r.song}</td>
+          <td>${r.juryPoints}</td>
+          <td>${r.televotePoints}</td>
+          <td>${r.total}</td>
+        </tr>
+      `).join("");
+    }
+
+    document.getElementById("btn-randomize").onclick = () => {
+      modelEntries = modelEntries.map(e => ({
+        ...e,
+        juryStrength: randomInt(20, 90),
+        televoteStrength: randomInt(20, 90)
+      }));
+      renderEntries();
+    };
+
+    document.getElementById("btn-reset").onclick = () => {
+      modelEntries = baseEntries.map(e => ({
+        ...e,
+        juryStrength: 50,
+        televoteStrength: 50
+      }));
+      renderEntries();
+    };
+
+    document.getElementById("btn-simulate").onclick = () => {
+      const jury = simulateRanking(modelEntries, "jury");
+      const televote = simulateRanking(modelEntries, "televote");
+      renderResults("jury-results", jury, "Puntos jurado");
+      renderResults("televote-results", televote, "Puntos televoto");
+      const final = computeFinal(jury, televote);
+      renderFinal(final);
+    };
+
+    // Inicial
+    renderEntries();
+  </script>
+</body>
+</html>
